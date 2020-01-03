@@ -9,23 +9,33 @@ Created on Fri Nov 29 21:04:35 2019
 from bs4 import BeautifulSoup as soup
 from urllib.request import urlopen as uReq
 import pandas as pd
+import os
+os.chdir("D:\\ketsaal data\\scraping")
 
-
-myurl="https://www.flipkart.com/search?q=Nicer+Dicer+&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off&p%5B%5D=facets.serviceability%5B%5D%3Dtrue&sort=price_asc"
+myurl="https://www.flipkart.com/search?q=washing%20machine%20cover&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=on&as=off"
 uclient=uReq(myurl)
 page_html=uclient.read()
 uclient.close()
 page_soup=soup(page_html,"html.parser")
-container=page_soup.find_all("div",{"class":"_3liAhj _1R0K0g"})
+container=page_soup.find_all("div",{"data-id":"ALCECCMEGYCZYGAM"})
 containers=container[0]
 print(len(container))
 print(soup.prettify(container[0]))
 print(containers.div.img["alt"])  # title name
-price=containers.find_all("div",{"class":"_1vC4OE"})
-print(price[0].text)
-rating=containers.find_all("div",{"class":"hGSR34"})
-print(rating[0].text)
-filename="products.csv"
+
+#Name=containers.find('a', attrs={'class':'_2cLu-l'})
+#price=containers.find('div', attrs={'class':'_1vC4OE'})
+#print(Name.text)#_2cLu-l
+
+#name=containers.find_all("div",{'title':'_2cLu-l'})
+#
+#price=containers.find_all("div",{"class":"_1vC4OE"})
+#print(price[0].text)
+#rating=containers.find_all("div",{"class":"hGSR34"})
+#print(rating[0].text)
+#Specification = containers.find_all("div",{"class":"_1rcHFq"})
+#print(Specification[0].text)
+#filename="products.csv"
 #f=open(filename,"w")
 #header="product_name,price,rating\n"
 #f.write(header)
@@ -68,18 +78,25 @@ filename="products.csv"
 ## Parse HTML and save to BeautifulSoup object¶
 #
 #soup = BeautifulSoup(response.text, "html.parser")
+import bs4
 
 products=[] #List to store name of the product
 prices=[] #List to store price of the product
 ratings=[] #List to store rating of the product
+specifications = []
 
-for containers in page_soup.findAll("div",{"class":"_3liAhj _1R0K0g"}):
-    name=containers.div.img["alt"]
+for containers in page_soup.findAll("div",{"class":"_3liAhj"}):
+#    name=containers.div.img["alt"]
+    name=containers.find('a', attrs={'class':'_2cLu-l'})
     price=containers.find('div', attrs={'class':'_1vC4OE'})
-    rating=containers.find('div', attrs={'class':'hGSR34'})
-    products.append(name)
+    rating=containers.find('div', attrs={'class':'hGSR34'}) 
+    specification = containers.find('div', attrs={'class':'_1rcHFq'})
+    products.append(name.text) if type(name) == bs4.element.Tag  else products.append('NaN')
     prices.append(price.text)
-    #ratings.append(rating.text)
+    specifications.append(specification.text)
+    ratings.append(rating.text) if type(rating) == bs4.element.Tag  else ratings.append('NaN')
 
-df = pd.DataFrame({'Product Name':products,'Price':prices}) 
-df.to_csv('products.csv', index=False, encoding='utf-8')
+type(name)
+
+df = pd.DataFrame({'Product Name':products,'Price':prices, 'Rating':ratings,'specification':specifications}) 
+df.to_excel('Washing Machine Cover.xlsx', index=False, encoding='utf-8')
